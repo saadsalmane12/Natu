@@ -12,7 +12,7 @@ const CATEGORIES = [
   { id: "actualite", label: "Actualité & Opinion", icon: "📰" },
   { id: "europe", label: "Europe & Monde", icon: "🇪🇺" },
   { id: "quiz", label: "Quiz Express", icon: "🧠" },
-];
+]; 
 
 const INFO_2026 = [
   { title: "Niveau de français requis", content: "Depuis le 1er janvier 2026, le niveau B2 oral est exigé (contre B1 auparavant), y compris pour la naturalisation par mariage. Vous devez fournir un diplôme ou une certification reconnue (TCF, DELF B2…).", emoji: "🗣️" },
