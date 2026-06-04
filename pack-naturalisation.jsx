@@ -1,5 +1,80 @@
-import { useState, useCallback } from "react";
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Entraînement Entretien Naturalisation Française 🇫🇷</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Source Sans 3', 'Segoe UI', sans-serif; background: #f7fafc; min-height: 100vh; }
+  #app { max-width: 640px; margin: 0 auto; min-height: 100vh; background: #f7fafc; }
+  .header { background: linear-gradient(135deg, #002654 0%, #0055A4 60%, #EF4135 100%); padding: 28px 20px 20px; color: #fff; }
+  .header h1 { font-family: 'Playfair Display', serif; font-size: 21px; font-weight: 700; }
+  .header p { font-size: 13px; opacity: 0.85; margin-top: 6px; }
+  .tabs { display: flex; overflow-x: auto; gap: 6px; padding: 12px 12px 8px; background: #fff; border-bottom: 1px solid #e2e8f0; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab-btn { padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0; background: #fff; color: #4a5568; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; flex-shrink: 0; font-family: inherit; transition: all 0.2s; }
+  .tab-btn.active { background: #0055A4; color: #fff; border-color: #0055A4; }
+  .search-wrap { padding: 12px 16px 0; }
+  .search-input { width: 100%; padding: 12px 16px; border-radius: 10px; border: 1.5px solid #e2e8f0; font-size: 14px; outline: none; background: #fff; font-family: inherit; }
+  .content { padding: 16px; }
+  /* Info */
+  .info-hero { background: linear-gradient(135deg, #0055A4 0%, #EF4135 100%); border-radius: 16px; padding: 24px 20px; color: #fff; margin-bottom: 16px; }
+  .info-hero h2 { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; }
+  .info-hero p { margin-top: 8px; font-size: 14px; opacity: 0.9; line-height: 1.5; }
+  details { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 10px; }
+  summary { padding: 16px 20px; cursor: pointer; font-weight: 600; font-size: 15px; color: #1a365d; list-style: none; display: flex; align-items: center; gap: 8px; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: '▸'; margin-left: auto; font-size: 12px; color: #a0aec0; transition: transform 0.2s; }
+  details[open] summary::after { transform: rotate(90deg); }
+  .detail-body { padding: 0 20px 16px; font-size: 14px; line-height: 1.7; color: #2d3748; white-space: pre-line; }
+  /* Flashcards */
+  .fc-meta { display: flex; justify-content: space-between; font-size: 13px; color: #718096; margin-bottom: 8px; }
+  .progress-bar { width: 100%; background: #e2e8f0; border-radius: 6px; height: 6px; overflow: hidden; margin-bottom: 16px; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #0055A4, #EF4135); border-radius: 6px; transition: width 0.4s ease; }
+  .card { background: #fff; border-radius: 16px; border: 2px solid #e2e8f0; padding: 24px; min-height: 200px; cursor: pointer; transition: all 0.3s ease; display: flex; flex-direction: column; justify-content: center; }
+  .card.flipped { background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 100%); border-color: #0055A4; box-shadow: 0 4px 20px rgba(0,85,164,0.1); }
+  .card-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: #a0aec0; margin-bottom: 10px; font-weight: 700; }
+  .card.flipped .card-label { color: #0055A4; }
+  .card-text { font-size: 17px; font-weight: 600; color: #1a365d; line-height: 1.7; }
+  .card.flipped .card-text { font-size: 14px; font-weight: 400; }
+  .fc-btns { display: flex; gap: 12px; margin-top: 4px; }
+  .btn-unknown { flex: 1; padding: 14px 0; border-radius: 12px; border: 2px solid #EF4135; background: #fff5f5; color: #c53030; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .btn-known { flex: 1; padding: 14px 0; border-radius: 12px; border: none; background: #0055A4; color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .result-box { text-align: center; padding: 32px; }
+  .result-emoji { font-size: 48px; margin-bottom: 12px; }
+  .result-box h3 { color: #1a365d; font-family: 'Playfair Display', serif; font-size: 22px; margin-bottom: 8px; }
+  .result-box p { color: #4a5568; font-size: 14px; margin-bottom: 20px; }
+  .btn-restart { background: #0055A4; color: #fff; border: none; border-radius: 10px; padding: 12px 28px; font-size: 15px; cursor: pointer; font-weight: 600; font-family: inherit; }
+  /* Quiz */
+  .quiz-q { font-size: 16px; font-weight: 600; color: #1a365d; line-height: 1.5; margin: 0 0 16px; }
+  .quiz-opts { display: flex; flex-direction: column; gap: 10px; }
+  .quiz-opt { text-align: left; padding: 14px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; background: #fff; color: #2d3748; font-size: 14px; cursor: pointer; font-weight: 500; transition: all 0.2s; font-family: inherit; }
+  .quiz-opt.correct { background: #f0fff4 !important; border: 2px solid #38a169 !important; color: #22543d !important; font-weight: 700; }
+  .quiz-opt.wrong { background: #fff5f5 !important; border: 2px solid #e53e3e !important; color: #9b2c2c !important; }
+  .quiz-correction { background: #f7fafc; border-radius: 12px; padding: 14px 16px; border: 1px solid #e2e8f0; margin-top: 8px; }
+  .quiz-corr-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .quiz-corr-text { font-size: 13px; line-height: 1.6; color: #2d3748; }
+  .quiz-next { align-self: flex-end; background: #0055A4; color: #fff; border: none; border-radius: 10px; padding: 12px 24px; font-size: 14px; cursor: pointer; font-weight: 600; font-family: inherit; margin-top: 8px; display: block; }
+  .quiz-score { display: flex; justify-content: space-between; font-size: 13px; color: #718096; margin-bottom: 8px; }
+  .no-results { text-align: center; padding: 32px; color: #718096; }
+  .footer { text-align: center; padding: 16px 20px 32px; font-size: 11px; color: #a0aec0; line-height: 1.6; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <h1>Entraînement Entretien Naturalisation Française 🇫🇷</h1>
+    <p id="header-stats"></p>
+  </div>
+  <div class="tabs" id="tabs"></div>
+  <div id="search-area"></div>
+  <div class="content" id="content"></div>
+  <div class="footer">Sources : entretiens réels (préfectures + TikTok + forums),<br>Livret du citoyen, réforme 2026 (circulaire Retailleau, décret 2025-1345)</div>
+</div>
 
+<script>
 const CATEGORIES = [
   { id: "info", label: "ℹ️ Info 2026", icon: "📋" },
   { id: "perso", label: "Personnel & Motivation", icon: "👤" },
@@ -12,7 +87,7 @@ const CATEGORIES = [
   { id: "actualite", label: "Actualité & Opinion", icon: "📰" },
   { id: "europe", label: "Europe & Monde", icon: "🇪🇺" },
   { id: "quiz", label: "Quiz Express", icon: "🧠" },
-]; 
+];
 
 const INFO_2026 = [
   { title: "Niveau de français requis", content: "Depuis le 1er janvier 2026, le niveau B2 oral est exigé (contre B1 auparavant), y compris pour la naturalisation par mariage. Vous devez fournir un diplôme ou une certification reconnue (TCF, DELF B2…).", emoji: "🗣️" },
@@ -195,7 +270,7 @@ const QUIZ_QUESTIONS = [
   { q: "Qui était Simone de Beauvoir et pourquoi est-elle célèbre ?", options: ["Ministre de la Santé", "Écrivaine et figure majeure du féminisme", "Résistante de la Seconde Guerre mondiale", "Scientifique prix Nobel"], correct: 1, correction: "Simone de Beauvoir (1908-1986) est une écrivaine et philosophe féministe. Son livre « Le Deuxième Sexe » (1949) est un texte fondateur du féminisme." },
   { q: "Dans quelle ville et quelle cathédrale les rois de France étaient-ils traditionnellement sacrés ?", options: ["À Paris, cathédrale Notre-Dame", "À Reims, cathédrale Notre-Dame de Reims", "À Versailles, chapelle royale", "À Saint-Denis, basilique royale"], correct: 1, correction: "À Reims, dans la cathédrale Notre-Dame de Reims, en Champagne. Tradition depuis le baptême de Clovis (vers 496) jusqu'à Charles X (1825)." },
   { q: "Quelle est la principale contribution de Napoléon Bonaparte encore en vigueur aujourd'hui ?", options: ["La Marseillaise", "Le Code civil", "La Déclaration des droits de l'homme", "La Sécurité sociale"], correct: 1, correction: "Le Code civil (1804), aussi appelé Code Napoléon. C'est la base du droit français actuel. Napoléon a aussi créé les lycées, la Banque de France et la Légion d'honneur." },
-  { q: "Combien y a-t-il de pays frontaliers de la France ? (Belgique, Luxembourg, Allemagne, Suisse, Italie, Monaco, Espagne, Andorre)", options: ["6 pays", "7 pays", "8 pays", "9 pays"], correct: 2, correction: "8 pays frontaliers : Belgique, Luxembourg, Allemagne, Suisse, Italie, Monaco, Espagne et Andorre." },
+  { q: "Combien y a-t-il de pays frontaliers de la France ?", options: ["6 pays", "7 pays", "8 pays", "9 pays"], correct: 2, correction: "8 pays frontaliers : Belgique, Luxembourg, Allemagne, Suisse, Italie, Monaco, Espagne et Andorre." },
   { q: "Dans quelle ville française se trouve le siège officiel du Parlement européen ?", options: ["Bruxelles", "Luxembourg", "Strasbourg", "Paris"], correct: 2, correction: "Le siège officiel du Parlement européen est à Strasbourg (France). La Commission européenne et le Conseil de l'UE siègent à Bruxelles." },
   { q: "Qui a fait voter la loi légalisant l'IVG en France en 1975 ?", options: ["Simone de Beauvoir", "Simone Veil", "Christiane Taubira", "Élisabeth Borne"], correct: 1, correction: "Simone Veil, alors ministre de la Santé. En 2024, ce droit a été inscrit dans la Constitution. Simone Veil est entrée au Panthéon en 2018." },
   { q: "Comment la Sécurité sociale est-elle principalement financée en France ?", options: ["Par les impôts sur le revenu uniquement", "Par les cotisations des salariés et des employeurs", "Par des dons et des subventions", "Par l'Union européenne"], correct: 1, correction: "Par les cotisations sociales prélevées sur les salaires (part salarié + part employeur). C'est le principe de solidarité : chacun cotise selon ses moyens." },
@@ -215,166 +290,160 @@ const QUIZ_QUESTIONS = [
   { q: "Peut-on porter un voile ou une kippa dans une école publique en France ?", options: ["Oui, c'est un droit", "Non, c'est interdit par la loi de 2004", "Seulement au lycée", "Seulement si c'est discret"], correct: 1, correction: "Non. La loi du 15 mars 2004 interdit le port de signes religieux ostensibles (voile, kippa, grande croix) dans les écoles, collèges et lycées publics." },
 ];
 
-function InfoTab() {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div style={{ background: "linear-gradient(135deg, #0055A4 0%, #EF4135 100%)", borderRadius: 16, padding: "24px 20px", color: "#fff" }}>
-        <h2 style={{ margin: 0, fontSize: 20, fontFamily: "'Playfair Display', serif", fontWeight: 700 }}>🇫🇷 Réforme 2026 — Ce qui change</h2>
-        <p style={{ margin: "8px 0 0", fontSize: 14, opacity: 0.9, lineHeight: 1.5 }}>Depuis le 1er janvier 2026, les règles sont plus exigeantes. À lire en premier !</p>
-      </div>
-      {INFO_2026.map((item, i) => (
-        <details key={i} style={{ background: "#fff", borderRadius: 12, border: "1px solid #e2e8f0", overflow: "hidden" }}>
-          <summary style={{ padding: "16px 20px", cursor: "pointer", fontWeight: 600, fontSize: 15, color: "#1a365d", listStyle: "none", display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 18 }}>{item.emoji}</span> {item.title}
-          </summary>
-          <div style={{ padding: "0 20px 16px", fontSize: 14, lineHeight: 1.7, color: "#2d3748", whiteSpace: "pre-line" }}>{item.content}</div>
-        </details>
-      ))}
-    </div>
-  );
+// --- App State ---
+let currentTab = "info";
+let searchTerm = "";
+// Flashcard state
+let fcIdx = 0, fcFlipped = false, fcKnown = 0, fcUnknown = 0, fcFinished = false, fcQuestions = [];
+// Quiz state
+let quizQuestions = [], quizCurrent = 0, quizSelected = null, quizScore = 0, quizAnswered = false, quizFinished = false;
+
+function totalQCount() { return Object.values(QUESTIONS).reduce((s, a) => s + a.length, 0); }
+
+function init() {
+  document.getElementById("header-stats").textContent = `${totalQCount()}+ questions · ${QUIZ_QUESTIONS.length} quiz QCM · Mis à jour mai 2026`;
+  renderTabs();
+  renderContent();
 }
 
-function FlashCards({ questions, catLabel }) {
-  const [idx, setIdx] = useState(0);
-  const [flipped, setFlipped] = useState(false);
-  const [known, setKnown] = useState(0);
-  const [unknown, setUnknown] = useState(0);
-  const [finished, setFinished] = useState(false);
+function renderTabs() {
+  const el = document.getElementById("tabs");
+  el.innerHTML = CATEGORIES.map(cat =>
+    `<button class="tab-btn${currentTab === cat.id ? " active" : ""}" onclick="switchTab('${cat.id}')">${cat.icon} ${cat.label}</button>`
+  ).join("");
+}
+
+function switchTab(id) {
+  currentTab = id;
+  searchTerm = "";
+  fcIdx = 0; fcFlipped = false; fcKnown = 0; fcUnknown = 0; fcFinished = false;
+  fcQuestions = QUESTIONS[id] ? [...QUESTIONS[id]] : [];
+  if (id === "quiz") initQuiz();
+  renderTabs();
+  renderSearchArea();
+  renderContent();
+}
+
+function renderSearchArea() {
+  const el = document.getElementById("search-area");
+  if (currentTab === "info" || currentTab === "quiz") { el.innerHTML = ""; return; }
+  const cat = CATEGORIES.find(c => c.id === currentTab);
+  el.innerHTML = `<div class="search-wrap"><input class="search-input" type="text" placeholder="🔍 Rechercher dans « ${cat.label} »…" value="${escHtml(searchTerm)}" oninput="onSearch(this.value)" /></div>`;
+}
+
+function onSearch(val) {
+  searchTerm = val;
+  const cat = QUESTIONS[currentTab];
+  if (!cat) return;
+  const s = val.toLowerCase();
+  fcQuestions = s ? cat.filter(q => q.q.toLowerCase().includes(s) || q.r.toLowerCase().includes(s)) : [...cat];
+  fcIdx = 0; fcFlipped = false; fcKnown = 0; fcUnknown = 0; fcFinished = false;
+  renderContent();
+}
+
+function renderContent() {
+  const el = document.getElementById("content");
+  if (currentTab === "info") { el.innerHTML = renderInfo(); return; }
+  if (currentTab === "quiz") { el.innerHTML = renderQuiz(); return; }
+  el.innerHTML = renderFlashCards();
+}
+
+function escHtml(s) { return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+function renderInfo() {
+  return `<div class="info-hero"><h2>🇫🇷 Réforme 2026 — Ce qui change</h2><p>Depuis le 1er janvier 2026, les règles sont plus exigeantes. À lire en premier !</p></div>` +
+    INFO_2026.map((item, i) =>
+      `<details><summary><span style="font-size:18px">${item.emoji}</span> ${escHtml(item.title)}</summary><div class="detail-body">${escHtml(item.content)}</div></details>`
+    ).join("");
+}
+
+function renderFlashCards() {
+  const questions = fcQuestions;
   const total = questions.length;
-  const card = questions[idx];
-  if (!card || total === 0) return <div style={{ textAlign: "center", padding: 32, color: "#718096" }}>Aucun résultat pour cette recherche.</div>;
-  const next = (isKnown) => { if (isKnown) setKnown(k => k + 1); else setUnknown(k => k + 1); setFlipped(false); if (idx < total - 1) setIdx(i => i + 1); else setFinished(true); };
-  const restart = () => { setIdx(0); setFlipped(false); setKnown(0); setUnknown(0); setFinished(false); };
-  if (finished) { const pct = Math.round((known / total) * 100); return (
-    <div style={{ textAlign: "center", padding: 32 }}>
-      <div style={{ fontSize: 48, marginBottom: 12 }}>{pct >= 80 ? "🎉" : pct >= 60 ? "👍" : "📚"}</div>
-      <h3 style={{ margin: 0, color: "#1a365d", fontFamily: "'Playfair Display', serif" }}>Résultat : {pct}%</h3>
-      <p style={{ color: "#4a5568", fontSize: 14, margin: "8px 0 20px" }}>✅ {known} connues — ❌ {unknown} à revoir</p>
-      <button onClick={restart} style={{ background: "#0055A4", color: "#fff", border: "none", borderRadius: 10, padding: "12px 28px", fontSize: 15, cursor: "pointer", fontWeight: 600 }}>Recommencer</button>
-    </div>); }
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13, color: "#718096" }}>
-        <span>{catLabel} — {idx + 1} / {total}</span>
-        <span>✅ {known} ❌ {unknown}</span>
-      </div>
-      <div style={{ width: "100%", background: "#e2e8f0", borderRadius: 6, height: 6, overflow: "hidden" }}>
-        <div style={{ width: `${((idx + 1) / total) * 100}%`, background: "linear-gradient(90deg, #0055A4, #EF4135)", height: "100%", borderRadius: 6, transition: "width 0.4s ease" }} />
-      </div>
-      <div onClick={() => setFlipped(!flipped)} style={{
-        background: flipped ? "linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 100%)" : "#fff",
-        borderRadius: 16, border: flipped ? "2px solid #0055A4" : "2px solid #e2e8f0",
-        padding: 24, minHeight: 200, cursor: "pointer",
-        display: "flex", flexDirection: "column", justifyContent: "center",
-        transition: "all 0.3s ease", boxShadow: flipped ? "0 4px 20px rgba(0,85,164,0.1)" : "0 2px 8px rgba(0,0,0,0.04)",
-      }}>
-        <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1.5, color: flipped ? "#0055A4" : "#a0aec0", marginBottom: 10, fontWeight: 700 }}>
-          {flipped ? "✅ Réponse" : "❓ Question — Touchez pour retourner"}
-        </div>
-        <p style={{ margin: 0, fontSize: flipped ? 14 : 17, lineHeight: 1.7, color: "#1a365d", fontWeight: flipped ? 400 : 600 }}>
-          {flipped ? card.r : card.q}
-        </p>
-      </div>
-      {flipped && (
-        <div style={{ display: "flex", gap: 12 }}>
-          <button onClick={() => next(false)} style={{ flex: 1, padding: "14px 0", borderRadius: 12, border: "2px solid #EF4135", background: "#fff5f5", color: "#c53030", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>❌ À revoir</button>
-          <button onClick={() => next(true)} style={{ flex: 1, padding: "14px 0", borderRadius: 12, border: "none", background: "#0055A4", color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>✅ Connue !</button>
-        </div>
-      )}
-    </div>);
-}
-
-function QuizTab() {
-  const [questions] = useState(() => [...QUIZ_QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 15));
-  const [current, setCurrent] = useState(0);
-  const [selected, setSelected] = useState(null);
-  const [score, setScore] = useState(0);
-  const [answered, setAnswered] = useState(false);
-  const [finished, setFinished] = useState(false);
-  const handleSelect = (i) => { if (answered) return; setSelected(i); setAnswered(true); if (i === questions[current].correct) setScore(s => s + 1); };
-  const handleNext = () => { if (current >= questions.length - 1) { setFinished(true); return; } setCurrent(c => c + 1); setSelected(null); setAnswered(false); };
-  const restart = () => { setCurrent(0); setSelected(null); setScore(0); setAnswered(false); setFinished(false); };
-  if (finished) { const pct = Math.round((score / questions.length) * 100); return (
-    <div style={{ textAlign: "center", padding: 32 }}>
-      <div style={{ fontSize: 56, marginBottom: 12 }}>{pct >= 80 ? "🏆" : pct >= 60 ? "👏" : "📖"}</div>
-      <h3 style={{ margin: 0, color: "#1a365d", fontFamily: "'Playfair Display', serif", fontSize: 22 }}>{score} / {questions.length}</h3>
-      <p style={{ color: "#4a5568", margin: "8px 0 4px" }}>{pct >= 80 ? "Excellent ! Vous êtes prêt(e) !" : pct >= 60 ? "Bien, continuez à réviser." : "Courage, révisez encore !"}</p>
-      <p style={{ color: "#718096", fontSize: 13, marginBottom: 20 }}>Rappel : examen civique = 80% minimum</p>
-      <button onClick={restart} style={{ background: "#0055A4", color: "#fff", border: "none", borderRadius: 10, padding: "12px 28px", fontSize: 15, cursor: "pointer", fontWeight: 600 }}>Nouveau quiz</button>
-    </div>); }
-  const q = questions[current];
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "#718096" }}>
-        <span>Question {current + 1}/{questions.length}</span>
-        <span>Score : {score}/{current + (answered ? 1 : 0)}</span>
-      </div>
-      <div style={{ width: "100%", background: "#e2e8f0", borderRadius: 6, height: 6 }}>
-        <div style={{ width: `${((current + 1) / questions.length) * 100}%`, background: "linear-gradient(90deg, #0055A4, #EF4135)", height: "100%", borderRadius: 6, transition: "width 0.4s" }} />
-      </div>
-      <p style={{ fontSize: 16, fontWeight: 600, color: "#1a365d", lineHeight: 1.5, margin: 0 }}>{q.q}</p>
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {q.options.map((opt, i) => {
-          let bg = "#fff", border = "1.5px solid #e2e8f0", color = "#2d3748", fw = 500;
-          if (answered) { if (i === q.correct) { bg = "#f0fff4"; border = "2px solid #38a169"; color = "#22543d"; fw = 700; } else if (i === selected && i !== q.correct) { bg = "#fff5f5"; border = "2px solid #e53e3e"; color = "#9b2c2c"; } }
-          return (<button key={i} onClick={() => handleSelect(i)} style={{ textAlign: "left", padding: "14px 16px", borderRadius: 12, background: bg, border, color, fontSize: 14, cursor: answered ? "default" : "pointer", fontWeight: fw, transition: "all 0.2s" }}>{String.fromCharCode(65 + i)}.  {opt}</button>);
-        })}
-      </div>
-      {answered && (
-        <div style={{ background: "#f7fafc", borderRadius: 12, padding: "14px 16px", border: "1px solid #e2e8f0", marginTop: 2 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: selected === q.correct ? "#38a169" : "#e53e3e", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>
-            {selected === q.correct ? "✅ Bonne réponse !" : "❌ Mauvaise réponse"}
-          </div>
-          <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: "#2d3748" }}>{q.correction}</p>
-        </div>
-      )}
-      {answered && (<button onClick={handleNext} style={{ alignSelf: "flex-end", background: "#0055A4", color: "#fff", border: "none", borderRadius: 10, padding: "12px 24px", fontSize: 14, cursor: "pointer", fontWeight: 600 }}>{current >= questions.length - 1 ? "Voir le résultat" : "Suivante →"}</button>)}
-    </div>);
-}
-
-export default function App() {
-  const [tab, setTab] = useState("info");
-  const [searchTerm, setSearchTerm] = useState("");
-  const filteredQuestions = useCallback((catId) => {
-    if (!QUESTIONS[catId]) return [];
-    if (!searchTerm.trim()) return QUESTIONS[catId];
-    const s = searchTerm.toLowerCase();
-    return QUESTIONS[catId].filter(q => q.q.toLowerCase().includes(s) || q.r.toLowerCase().includes(s));
-  }, [searchTerm]);
-  const totalQuestions = Object.values(QUESTIONS).reduce((sum, arr) => sum + arr.length, 0);
-  const currentCat = CATEGORIES.find(c => c.id === tab);
-  return (
-    <div style={{ fontFamily: "'Source Sans 3', 'Segoe UI', sans-serif", maxWidth: 640, margin: "0 auto", minHeight: "100vh", background: "#f7fafc" }}>
-      <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      <div style={{ background: "linear-gradient(135deg, #002654 0%, #0055A4 60%, #EF4135 100%)", padding: "28px 20px 20px", color: "#fff" }}>
-        <h1 style={{ margin: 0, fontSize: 21, fontFamily: "'Playfair Display', serif", fontWeight: 700 }}>Entraînement Entretien Naturalisation Française 🇫🇷</h1>
-        <p style={{ margin: "6px 0 0", fontSize: 13, opacity: 0.85 }}>{totalQuestions}+ questions · {QUIZ_QUESTIONS.length} quiz QCM · Mis à jour mai 2026</p>
-      </div>
-      <div style={{ display: "flex", overflowX: "auto", gap: 6, padding: "12px 12px 8px", background: "#fff", borderBottom: "1px solid #e2e8f0", WebkitOverflowScrolling: "touch" }}>
-        {CATEGORIES.map(cat => (
-          <button key={cat.id} onClick={() => { setTab(cat.id); setSearchTerm(""); }} style={{
-            padding: "8px 12px", borderRadius: 8, border: tab === cat.id ? "none" : "1px solid #e2e8f0",
-            background: tab === cat.id ? "#0055A4" : "#fff", color: tab === cat.id ? "#fff" : "#4a5568",
-            fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0,
-          }}>{cat.icon} {cat.label}</button>
-        ))}
-      </div>
-      {tab !== "info" && tab !== "quiz" && (
-        <div style={{ padding: "12px 16px 0" }}>
-          <input type="text" placeholder={`🔍 Rechercher dans « ${currentCat?.label} »…`} value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
-            style={{ width: "100%", boxSizing: "border-box", padding: "12px 16px", borderRadius: 10, border: "1.5px solid #e2e8f0", fontSize: 14, outline: "none", background: "#fff" }} />
-        </div>
-      )}
-      <div style={{ padding: 16 }}>
-        {tab === "info" && <InfoTab />}
-        {tab === "quiz" && <QuizTab />}
-        {tab !== "info" && tab !== "quiz" && QUESTIONS[tab] && (
-          <FlashCards key={tab + searchTerm} questions={filteredQuestions(tab)} catLabel={currentCat?.label || ""} />
-        )}
-      </div>
-      <div style={{ textAlign: "center", padding: "16px 20px 32px", fontSize: 11, color: "#a0aec0", lineHeight: 1.6 }}>
-        Sources : entretiens réels (préfectures + TikTok + forums),<br />Livret du citoyen, réforme 2026 (circulaire Retailleau, décret 2025-1345)
-      </div>
+  if (!total) return `<div class="no-results">Aucun résultat pour cette recherche.</div>`;
+  if (fcFinished) {
+    const pct = Math.round((fcKnown / total) * 100);
+    const emoji = pct >= 80 ? "🎉" : pct >= 60 ? "👍" : "📚";
+    return `<div class="result-box"><div class="result-emoji">${emoji}</div><h3>Résultat : ${pct}%</h3><p>✅ ${fcKnown} connues — ❌ ${fcUnknown} à revoir</p><button class="btn-restart" onclick="fcRestart()">Recommencer</button></div>`;
+  }
+  const card = questions[fcIdx];
+  const cat = CATEGORIES.find(c => c.id === currentTab);
+  const pctW = Math.round(((fcIdx + 1) / total) * 100);
+  return `
+    <div class="fc-meta"><span>${escHtml(cat?.label||"")} — ${fcIdx + 1} / ${total}</span><span>✅ ${fcKnown} ❌ ${fcUnknown}</span></div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${pctW}%"></div></div>
+    <div class="card${fcFlipped ? " flipped" : ""}" onclick="fcFlip()">
+      <div class="card-label">${fcFlipped ? "✅ Réponse" : "❓ Question — Touchez pour retourner"}</div>
+      <p class="card-text">${escHtml(fcFlipped ? card.r : card.q)}</p>
     </div>
-  );
+    ${fcFlipped ? `<div class="fc-btns"><button class="btn-unknown" onclick="fcNext(false)">❌ À revoir</button><button class="btn-known" onclick="fcNext(true)">✅ Connue !</button></div>` : ""}
+  `;
 }
+
+function fcFlip() { fcFlipped = !fcFlipped; renderContent(); }
+function fcNext(known) {
+  if (known) fcKnown++; else fcUnknown++;
+  fcFlipped = false;
+  if (fcIdx < fcQuestions.length - 1) fcIdx++;
+  else fcFinished = true;
+  renderContent();
+}
+function fcRestart() { fcIdx = 0; fcFlipped = false; fcKnown = 0; fcUnknown = 0; fcFinished = false; renderContent(); }
+
+function initQuiz() {
+  quizQuestions = [...QUIZ_QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 15);
+  quizCurrent = 0; quizSelected = null; quizScore = 0; quizAnswered = false; quizFinished = false;
+}
+
+function renderQuiz() {
+  if (quizFinished) {
+    const pct = Math.round((quizScore / quizQuestions.length) * 100);
+    const emoji = pct >= 80 ? "🏆" : pct >= 60 ? "👏" : "📖";
+    const msg = pct >= 80 ? "Excellent ! Vous êtes prêt(e) !" : pct >= 60 ? "Bien, continuez à réviser." : "Courage, révisez encore !";
+    return `<div class="result-box"><div class="result-emoji" style="font-size:56px">${emoji}</div><h3>${quizScore} / ${quizQuestions.length}</h3><p>${msg}</p><p style="color:#718096;font-size:13px;margin-bottom:20px">Rappel : examen civique = 80% minimum</p><button class="btn-restart" onclick="quizRestart()">Nouveau quiz</button></div>`;
+  }
+  const q = quizQuestions[quizCurrent];
+  const pctW = Math.round(((quizCurrent + 1) / quizQuestions.length) * 100);
+  const opts = q.options.map((opt, i) => {
+    let cls = "quiz-opt";
+    if (quizAnswered) {
+      if (i === q.correct) cls += " correct";
+      else if (i === quizSelected && i !== q.correct) cls += " wrong";
+    }
+    return `<button class="${cls}" onclick="quizSelect(${i})" ${quizAnswered ? "disabled" : ""}>${String.fromCharCode(65+i)}. ${escHtml(opt)}</button>`;
+  }).join("");
+  const correction = quizAnswered ? `
+    <div class="quiz-correction">
+      <div class="quiz-corr-label" style="color:${quizSelected===q.correct?"#38a169":"#e53e3e"}">${quizSelected===q.correct?"✅ Bonne réponse !":"❌ Mauvaise réponse"}</div>
+      <p class="quiz-corr-text">${escHtml(q.correction)}</p>
+    </div>
+    <button class="quiz-next" onclick="quizNext()">${quizCurrent >= quizQuestions.length - 1 ? "Voir le résultat" : "Suivante →"}</button>
+  ` : "";
+  return `
+    <div class="quiz-score"><span>Question ${quizCurrent+1}/${quizQuestions.length}</span><span>Score : ${quizScore}/${quizCurrent+(quizAnswered?1:0)}</span></div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${pctW}%"></div></div>
+    <p class="quiz-q">${escHtml(q.q)}</p>
+    <div class="quiz-opts">${opts}</div>
+    ${correction}
+  `;
+}
+
+function quizSelect(i) {
+  if (quizAnswered) return;
+  quizSelected = i;
+  quizAnswered = true;
+  if (i === quizQuestions[quizCurrent].correct) quizScore++;
+  renderContent();
+}
+function quizNext() {
+  if (quizCurrent >= quizQuestions.length - 1) { quizFinished = true; }
+  else { quizCurrent++; quizSelected = null; quizAnswered = false; }
+  renderContent();
+}
+function quizRestart() { initQuiz(); renderContent(); }
+
+// Boot
+switchTab("info");
+</script>
+</body>
+</html>
